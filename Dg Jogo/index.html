@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Pixel Quest: Guardiões do Código — um jogo de plataforma criado com HTML, CSS e JavaScript.">
+<title>Pixel Quest: Guardiões do Código</title>
+<style>
+:root{--cyan:#56e7ff;--blue:#3478ff;--purple:#a56bff;--gold:#ffd166;--ink:#080d1c;--panel:#111a32;--white:#f4f7ff;--muted:#a8b6d8}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(ellipse at top,#182858 0%,#090e20 60%,#050811 100%);color:var(--white);font-family:Inter,Segoe UI,system-ui,Arial,sans-serif}
+body{display:flex;justify-content:center;padding:22px 12px}
+.app{width:min(1120px,100%);display:grid;gap:14px}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:4px 4px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(135deg,var(--cyan),var(--purple));color:#081022;font-size:25px;box-shadow:0 0 26px #56e7ff40}
+h1{font-size:clamp(20px,3vw,30px);margin:0;letter-spacing:.4px}
+.subtitle{font-size:12px;color:var(--muted);margin-top:3px}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap}
+button{border:1px solid #ffffff20;background:#172343;color:var(--white);padding:10px 14px;border-radius:11px;font-weight:750;cursor:pointer;transition:.18s transform,.18s border-color,.18s background}
+button:hover{transform:translateY(-1px);border-color:var(--cyan);background:#20335e}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+button.primary{background:linear-gradient(110deg,#2b83ff,#8c58ff);border:0;box-shadow:0 8px 25px #3478ff30}
+.hud{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.stat{padding:12px 14px;background:#111a32cc;border:1px solid #8ca9ff24;border-radius:13px;min-width:0}
+.stat-label{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:var(--muted);font-weight:800}
+.stat-value{font-size:21px;font-weight:900;margin-top:3px;font-variant-numeric:tabular-nums}
+.heart{color:#ff6b9b}
+.game-shell{position:relative;border:1px solid #78b9ff55;border-radius:19px;overflow:hidden;background:#060b19;box-shadow:0 22px 70px #0008,0 0 40px #3478ff12}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;outline:none}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#070c20df,#11153bd9);backdrop-filter:blur(5px)}
+.overlay.hidden{display:none}
+.modal{width:min(510px,100%);text-align:center;padding:clamp(18px,4vw,34px);border-radius:22px;border:1px solid #83c9ff55;background:linear-gradient(150deg,#172449f5,#0c132af5);box-shadow:0 20px 70px #0008}
+.eyebrow{color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase}
+.modal h2{font-size:clamp(27px,5vw,42px);line-height:1.04;margin:10px 0 12px}
+.modal p{color:#c4cee8;line-height:1.55;margin:0 0 18px;font-size:14px}
+.modal-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.controls{display:grid;grid-template-columns:1.2fr 1fr;gap:12px}
+.info{padding:15px 17px;background:#111a32cc;border:1px solid #8ca9ff24;border-radius:14px}
+.info h3{font-size:12px;letter-spacing:1px;text-transform:uppercase;margin:0 0 9px;color:var(--cyan)}
+.info p{margin:0;color:#bdc9e6;font-size:13px;line-height:1.6}
+kbd{font-family:inherit;font-size:11px;font-weight:900;color:#fff;background:#263657;border:1px solid #ffffff28;border-bottom-width:3px;padding:3px 7px;border-radius:6px;white-space:nowrap}
+.footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#7e8db5;font-size:11px;padding:0 4px}
+#toast{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:#101a32eF;border:1px solid #56e7ff80;color:#eafaff;padding:9px 14px;border-radius:100px;font-size:12px;font-weight:800;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
+#toast.show{opacity:1}
+.mobile-controls{display:none;justify-content:space-between;gap:10px;padding:0 2px}
+.mobile-controls .group{display:flex;gap:8px}
+.mobile-controls button{width:58px;height:52px;font-size:20px;touch-action:none;user-select:none}
+@media(max-width:700px){body{padding:12px 8px}.hud{grid-template-columns:repeat(3,1fr)}.stat{padding:9px 11px}.stat-value{font-size:18px}.controls{grid-template-columns:1fr}.mobile-controls{display:flex}.header-actions button{padding:9px 10px}.subtitle{max-width:220px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><div class="logo" aria-hidden="true">✦</div><div><h1>PIXEL QUEST <span style="color:var(--cyan)">/</span> Guardiões do Código</h1><div class="subtitle">Uma aventura de plataforma • HTML, CSS e JavaScript</div></div></div>
+    <div class="header-actions">
+      <button id="soundBtn" aria-pressed="false" title="Ativar ou desativar efeitos sonoros">♫ Som: desligado</button>
+      <button id="restartBtn" title="Reiniciar a fase atual">↻ Reiniciar</button>
+      <button id="pauseBtn" title="Pausar ou continuar">Ⅱ Pausar</button>
+    </div>
+  </header>
+  <section class="hud" aria-label="Status do jogo">
+    <div class="stat"><div class="stat-label">Fase</div><div class="stat-value" id="levelValue">01 / 03</div></div>
+    <div class="stat"><div class="stat-label">Pontos</div><div class="stat-value" id="scoreValue">0000</div></div>
+    <div class="stat"><div class="stat-label">Cristais</div><div class="stat-value" id="crystalValue">0 / 0</div></div>
+    <div class="stat"><div class="stat-label">Vidas</div><div class="stat-value heart" id="livesValue">♥ ♥ ♥</div></div>
+    <div class="stat"><div class="stat-label">Recorde</div><div class="stat-value" id="bestValue">0000</div></div>
+  </section>
+  <main class="game-shell">
+    <canvas id="game" width="960" height="540" tabindex="0" aria-label="Área do jogo Pixel Quest. Use as setas ou A e D para andar e espaço para pular."></canvas>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <div class="eyebrow" id="modalEyebrow">MISSÃO INICIADA</div>
+        <h2 id="modalTitle">Recupere os<br><span style="color:var(--cyan)">Cristais de Código</span></h2>
+        <p id="modalText">Explore três mundos, colete cristais e desvie dos bugs. Chegue ao portal para salvar o Núcleo Digital!</p>
+        <div class="modal-actions"><button class="primary" id="mainBtn">▶ Jogar agora</button><button id="howBtn">Como jogar</button></div>
+      </div>
+    </div>
+  </main>
+  <div class="mobile-controls" aria-label="Controles para celular">
+    <div class="group"><button data-hold="left" aria-label="Andar para esquerda">◀</button><button data-hold="right" aria-label="Andar para direita">▶</button></div>
+    <div class="group"><button data-hold="jump" aria-label="Pular">⤒</button>
+    <button id="mobilePause" aria-label="Pausar">Ⅱ</button></div>
+  </div>
+  <section class="controls">
+    <div class="info"><h3>⌨ Controles</h3><p><kbd>←</kbd> <kbd>→</kbd> ou <kbd>A</kbd> <kbd>D</kbd> mover · <kbd>Espaço</kbd>/<kbd>↑</kbd>/<kbd>W</kbd> pular · <kbd>P</kbd> pausar · <kbd>R</kbd> reiniciar. No celular, use os botões na tela.</p></div>
+    <div class="info"><h3>✧ Sua missão</h3><p>Junte os cristais, evite os bugs e alcance o portal brilhante. Você ganha pontos por cristais e por concluir fases. Se perder todas as vidas, poderá tentar novamente.</p></div>
+  </section>
+  <div class="footer"><span>Projeto educacional • Feito com Canvas API e JavaScript puro</span><span>Seu progresso é salvo neste navegador</span></div>
+</div>
+<script>
+(() => {
+'use strict';
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const $ = id => document.getElementById(id);
+const ui = {level:$('levelValue'),score:$('scoreValue'),crystals:$('crystalValue'),lives:$('livesValue'),best:$('bestValue')};
+const overlay = $('overlay'), modalTitle=$('modalTitle'), modalText=$('modalText'), modalEyebrow=$('modalEyebrow'), mainBtn=$('mainBtn');
+const keys = {left:false,right:false,jump:false};
+let state='menu', levelIndex=0, score=0, lives=3, best=Number(localStorage.getItem('pixelQuestBest')||0);
+let player, platforms=[], crystals=[], enemies=[], particles=[], portal, cameraX=0, frame=0, lastTime=0, soundOn=false, audioCtx=null, toastTimer=null;
+const levelSpecs = [
+ {name:'Floresta Neon',length:2200,bg1:'#0a1a36',bg2:'#123d59',ground:'#1a6c65',accent:'#58f5ca',platforms:[[0,490,440,50],[510,450,170,20],[735,410,150,20],[950,465,250,25],[1270,425,160,20],[1490,380,170,20],[1740,450,460,50]],crystals:[[170,440],[300,440],[560,400],[610,400],[785,360],[1030,415],[1110,415],[1320,375],[1550,330],[1610,330],[1830,400],[1940,400]],enemies:[[370,456,30,70],[1000,431,28,80],[1790,416,30,100]]},
+ {name:'Fábrica Glitch',length:2440,bg1:'#21133d',bg2:'#49285f',ground:'#7953b3',accent:'#ff9bf3',platforms:[[0,490,300,50],[365,445,180,20],[615,395,160,20],[850,445,180,20],[1090,390,190,20],[1350,440,170,20],[1570,375,170,20],[1800,425,180,20],[2050,465,390,50]],crystals:[[115,440],[220,440],[410,395],[475,395],[660,345],[900,395],[965,395],[1140,340],[1210,340],[1400,390],[1630,325],[1690,325],[1870,375],[2150,415],[2260,415]],enemies:[[160,456,28,60],[670,361,28,70],[1120,356,30,90],[1840,391,28,80],[2150,431,30,100]]},
+ {name:'Núcleo Digital',length:2680,bg1:'#081c32',bg2:'#134f73',ground:'#277d9c',accent:'#ffe07b',platforms:[[0,490,350,50],[415,440,155,20],[630,385,155,20],[845,435,170,20],[1080,375,150,20],[1290,425,170,20],[1515,360,170,20],[1740,410,160,20],[1950,355,180,20],[2190,450,490,50]],crystals:[[100,440],[210,440],[465,390],[510,390],[675,335],[730,335],[890,385],[955,385],[1120,325],[1180,325],[1340,375],[1570,310],[1630,310],[1800,360],[2010,305],[2080,305],[2290,400],[2410,400],[2530,400]],enemies:[[230,456,30,70],[465,406,27,60],[900,401,28,80],[1340,391,30,70],[1790,376,28,80],[2290,416,30,90]]}
+];
+function beep(freq=440,duration=.07,type='sine'){if(!soundOn)return;try{audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.045,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+duration)}catch(e){}}
+function showToast(text){const t=$('toast');t.textContent=text;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1500)}
+function updateHUD(){ui.level.textContent=String(levelIndex+1).padStart(2,'0')+' / 03';ui.score.textContent=String(score).padStart(4,'0');ui.crystals.textContent=crystals.filter(c=>!c.got).length+' / '+crystals.length;ui.lives.textContent='♥ '.repeat(Math.max(0,lives)).trim()||'—';ui.best.textContent=String(best).padStart(4,'0')}
+function createLevel(index,keepPlayer=false){
+ const spec=levelSpecs[index];platforms=spec.platforms.map(p=>({x:p[0],y:p[1],w:p[2],h:p[3]}));
+ crystals=spec.crystals.map(([x,y],i)=>({x,y,r:10,got:false,phase:i*.7}));
+ enemies=spec.enemies.map(([x,y,w,range],i)=>({x,y,w,h:30,start:x,range,dir:i%2? -1:1,speed:1.05+i*.12,alive:true,phase:i}));
+ portal={x:spec.length-105,y:390,w:46,h:100,phase:0};cameraX=0;
+ if(!keepPlayer||!player)player={x:45,y:420,w:28,h:38,vx:0,vy:0,onGround:false,invuln:0,facing:1,walk:0};
+ else {player.x=35;player.y=420;player.vx=0;player.vy=0;player.invuln=1.2}
+ particles=[];updateHUD();
+}
+function startGame(){score=0;lives=3;levelIndex=0;createLevel(0);state='playing';overlay.classList.add('hidden');$('pauseBtn').textContent='Ⅱ Pausar';canvas.focus();showToast('Boa sorte, Guardião!');}
+function showOverlay(eyebrow,title,text,buttonText='Jogar agora'){modalEyebrow.textContent=eyebrow;modalTitle.innerHTML=title;modalText.textContent=text;mainBtn.textContent=buttonText;overlay.classList.remove('hidden')}
+function pauseGame(){if(state==='playing'){state='paused';showOverlay('PAUSA','Respire. <span style="color:var(--cyan)">Você consegue!</span>','O jogo está pausado. Continue sua missão quando estiver pronto.','▶ Continuar');$('pauseBtn').textContent='▶ Continuar'}else if(state==='paused'){state='playing';overlay.classList.add('hidden');$('pauseBtn').textContent='Ⅱ Pausar';canvas.focus()}}
+function restartLevel(){if(state==='menu'){startGame();return}createLevel(levelIndex);state='playing';overlay.classList.add('hidden');$('pauseBtn').textContent='Ⅱ Pausar';showToast('Fase reiniciada')}
+function finishLevel(){score+=250+crystals.filter(c=>c.got).length*10;best=Math.max(best,score);localStorage.setItem('pixelQuestBest',String(best));if(levelIndex<levelSpecs.length-1){levelIndex++;createLevel(levelIndex,true);showToast('Fase concluída! + bônus');beep(660,.13);updateHUD()}else{state='won';updateHUD();showOverlay('MISSÃO CONCLUÍDA','Você salvou o <span style="color:var(--gold)">Núcleo Digital!</span>','Parabéns! Você atravessou os três mundos e derrotou os bugs. Pontuação final: '+score+'.','↻ Jogar novamente');beep(880,.22);}}
+function hurt(){if(player.invuln>0)return;lives--;player.invuln=1.5;player.vy=-5;player.vx=-player.facing*3;beep(130,.16,'sawtooth');if(lives<=0){state='gameover';best=Math.max(best,score);localStorage.setItem('pixelQuestBest',String(best));showOverlay('FIM DE JOGO','Os bugs venceram <span style="color:#ff6b9b">desta vez.</span>','Sua pontuação: '+score+'. Não desista — cada tentativa ensina algo novo!','↻ Tentar novamente')}else showToast('Cuidado! Você perdeu uma vida.');updateHUD()}
+function addParticles(x,y,color,count=8){for(let i=0;i<count;i++)particles.push({x,y,vx:(Math.random()-.5)*4,vy:(Math.random()-.8)*4,life:.45+Math.random()*.4,color,size:2+Math.random()*3})}
+function overlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
+function update(dt){
+ frame++;const spec=levelSpecs[levelIndex];const step=Math.min(dt,.033);
+ if(keys.left){player.vx-=.65;player.facing=-1}if(keys.right){player.vx+=.65;player.facing=1}
+ player.vx=Math.max(-4.5,Math.min(4.5,player.vx));if(!keys.left&&!keys.right)player.vx*=Math.pow(.78,step*60);
+ if(keys.jump&&player.onGround){player.vy=-11.8;player.onGround=false;beep(320,.05)}
+ player.vy=Math.min(13,player.vy+0.58*step*60);
+ const oldY=player.y;player.x+=player.vx*step*60;player.y+=player.vy*step*60;player.x=Math.max(0,Math.min(spec.length-player.w,player.x));player.onGround=false;
+ for(const p of platforms){if(player.x+player.w>p.x&&player.x<p.x+p.w){if(oldY+player.h<=p.y+4&&player.y+player.h>=p.y&&player.vy>=0){player.y=p.y-player.h;player.vy=0;player.onGround=true}else if(oldY>=p.y+p.h-2&&player.y<p.y+p.h&&player.vy<0){player.y=p.y+p.h;player.vy=1}}}
+ if(player.y>H+120){hurt();player.x=Math.max(25,player.x-80);player.y=360;player.vy=0}
+ if(player.invuln>0)player.invuln-=step;player.walk+=Math.abs(player.vx)*step;
+ for(const c of crystals){if(!c.got&&Math.hypot(player.x+player.w/2-c.x,player.y+player.h/2-c.y)<25){c.got=true;score+=10;addParticles(c.x,c.y,'#7df9ff',10);beep(650,.06);updateHUD()}}
+ for(const e of enemies){if(!e.alive)continue;e.x+=e.dir*e.speed*step*60;if(e.x<e.start-e.range/2||e.x>e.start+e.range/2)e.dir*=-1;if(overlap(player,{x:e.x,y:e.y,w:e.w,h:e.h})){const stomp=player.vy>1&&oldY+player.h<e.y+10;if(stomp){e.alive=false;player.vy=-8;score+=50;addParticles(e.x+e.w/2,e.y,'#ff83d0',14);beep(520,.09);updateHUD()}else hurt()}}
+ if(overlap(player,portal)){finishLevel()}
+ cameraX=Math.max(0,Math.min(spec.length-W,player.x-W*.35));
+ for(const p of particles){p.x+=p.vx;p.y+=p.vy;p.vy+=.12;p.life-=step}particles=particles.filter(p=>p.life>0);
+}
+function roundRect(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.stroke()}}
+function drawBackground(spec){
+ const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,spec.bg1);grad.addColorStop(1,spec.bg2);ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+ // Distant digital skyline
+ for(let i=0;i<24;i++){const x=((i*113-cameraX*.18)%(W+130)+W+130)%(W+130)-50;const h=65+(i*47%120);ctx.fillStyle=i%2?'#14294a':'#172447';ctx.fillRect(x,330-h,40,h);ctx.fillStyle=spec.accent;ctx.globalAlpha=.28;for(let wy=345-h;wy<320;wy+=17)ctx.fillRect(x+8,wy,5,7);ctx.globalAlpha=1}
+ for(let i=0;i<55;i++){let x=(i*167-cameraX*.35)%(W+20);if(x<0)x+=W+20;const y=(i*71)%285;ctx.fillStyle=i%4===0?spec.accent:'#b6dfff';ctx.globalAlpha=.2+(i%3)*.13;ctx.fillRect(x,y,2,2);ctx.globalAlpha=1}
+ // soft glow at horizon
+ const glow=ctx.createRadialGradient(480,420,10,480,420,420);glow.addColorStop(0,spec.accent+'22');glow.addColorStop(1,'#00000000');ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
+}
+function drawPlatform(p,spec){const x=Math.round(p.x-cameraX);if(x+p.w<0||x>W)return;ctx.fillStyle='#071020';ctx.fillRect(x,p.y+5,p.w,p.h);ctx.fillStyle=spec.ground;ctx.fillRect(x,p.y,p.w,p.h);ctx.fillStyle=spec.accent;ctx.fillRect(x,p.y,p.w,4);ctx.fillStyle='#ffffff16';for(let xx=x+8;xx<x+p.w-6;xx+=20)ctx.fillRect(xx,p.y+12,7,3);ctx.fillStyle='#00000024';ctx.fillRect(x,p.y+p.h-7,p.w,7)}
+function drawCrystal(c){const x=c.x-cameraX,y=c.y+Math.sin(frame*.08+c.phase)*4;ctx.save();ctx.translate(x,y);ctx.rotate(Math.PI/4);ctx.shadowBlur=16;ctx.shadowColor='#58f5ff';ctx.fillStyle='#b9ffff';ctx.fillRect(-7,-7,14,14);ctx.fillStyle='#39b9ff';ctx.fillRect(-4,-4,8,8);ctx.restore()}
+function drawEnemy(e){const x=e.x-cameraX;if(x<-50||x>W+50||!e.alive)return;ctx.save();ctx.translate(x+e.w/2,e.y+e.h/2);ctx.fillStyle='#ff4f91';ctx.shadowBlur=15;ctx.shadowColor='#ff4f91';roundRect(-e.w/2,-e.h/2,e.w,e.h,8,'#b72e73','#ff9ac8');ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.fillRect(-8,-4,5,7);ctx.fillRect(4,-4,5,7);ctx.fillStyle='#24102b';ctx.fillRect(-7,-2,3,4);ctx.fillRect(5,-2,3,4);ctx.fillStyle='#5b1948';ctx.fillRect(-6,8,12,3);ctx.restore()}
+function drawPlayer(){const x=player.x-cameraX,y=player.y;ctx.save();if(player.invuln>0&&Math.floor(frame/4)%2===0)ctx.globalAlpha=.35;ctx.translate(x+player.w/2,y+player.h/2);if(player.facing<0)ctx.scale(-1,1);const bob=player.onGround?Math.sin(player.walk*10)*1.5:0;ctx.shadowBlur=12;ctx.shadowColor='#59dfff';roundRect(-13,-16+bob,26,29,7,'#297dff','#9aeaff');ctx.shadowBlur=0;roundRect(-10,-23+bob,20,17,6,'#f4c9a4','#fff0d8');roundRect(-12,-25+bob,23,8,5,'#17213c','#8ca9ff');ctx.fillStyle='#101b37';ctx.fillRect(-5,-17+bob,3,5);ctx.fillRect(4,-17+bob,3,5);ctx.fillStyle='#54f4ff';ctx.fillRect(2,-16+bob,2,2);ctx.fillStyle='#19274b';ctx.fillRect(-10,12+bob,8,8);ctx.fillRect(3,12+bob,8,8);ctx.fillStyle='#ffd166';ctx.fillRect(8,-5+bob,7,4);ctx.restore()}
+function drawPortal(){const x=portal.x-cameraX,y=portal.y;ctx.save();ctx.translate(x+portal.w/2,y+portal.h/2);ctx.rotate(Math.sin(frame*.025)*.04);ctx.shadowBlur=25;ctx.shadowColor=levelSpecs[levelIndex].accent;ctx.strokeStyle=levelSpecs[levelIndex].accent;ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(0,0,portal.w/2+Math.sin(frame*.08)*3,portal.h/2,0,0,Math.PI*2);ctx.stroke();ctx.lineWidth=2;ctx.strokeStyle='#ffffff';ctx.globalAlpha=.65;ctx.beginPath();ctx.ellipse(0,0,portal.w/2-5,portal.h/2-7,0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;ctx.fillStyle=levelSpecs[levelIndex].accent;ctx.font='bold 22px monospace';ctx.textAlign='center';ctx.fillText('↗',0,8);ctx.restore()}
+function draw(){
+ const spec=levelSpecs[levelIndex]||levelSpecs[0];drawBackground(spec);
+ // Decorative grid
+ ctx.strokeStyle='#ffffff08';ctx.lineWidth=1;for(let x=-(cameraX%48);x<W;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=24;y<H;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+ platforms.forEach(p=>drawPlatform(p,spec));drawPortal();crystals.forEach(c=>{if(!c.got)drawCrystal(c)});enemies.forEach(drawEnemy);
+ for(const p of particles){ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(p.x-cameraX,p.y,p.size,p.size)}ctx.globalAlpha=1;drawPlayer();
+ // level title plate
+ roundRect(18,18,205,36,10,'#071126bb','#ffffff22');ctx.fillStyle='#eaf5ff';ctx.font='800 12px system-ui';ctx.fillText('MUNDO '+String(levelIndex+1).padStart(2,'0')+'  /  '+spec.name.toUpperCase(),31,40);
+}
+function loop(t){const dt=(t-lastTime)/1000||0;lastTime=t;if(state==='playing')update(dt);draw();requestAnimationFrame(loop)}
+mainBtn.addEventListener('click',()=>{if(state==='paused'){pauseGame()}else if(state==='won'||state==='gameover'||state==='menu'){startGame()}else if(state==='playing'){overlay.classList.add('hidden')}});
+$('howBtn').addEventListener('click',()=>showOverlay('GUIA RÁPIDO','Pule, colete e <span style="color:var(--cyan)">avance!</span>','Use ← → ou A/D para andar e Espaço, ↑ ou W para pular. Pise nos bugs por cima para derrotá-los. Pegue cristais e entre no portal para avançar.','Entendi'));
+$('restartBtn').addEventListener('click',restartLevel);$('pauseBtn').addEventListener('click',pauseGame);$('mobilePause').addEventListener('click',pauseGame);
+$('soundBtn').addEventListener('click',()=>{soundOn=!soundOn;$('soundBtn').textContent=soundOn?'♫ Som: ligado':'♫ Som: desligado';$('soundBtn').setAttribute('aria-pressed',String(soundOn));if(soundOn)beep(520,.08)});
+window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowleft','arrowright','arrowup',' ','arrowdown'].includes(k))e.preventDefault();if(k==='arrowleft'||k==='a')keys.left=true;if(k==='arrowright'||k==='d')keys.right=true;if(k===' '||k==='arrowup'||k==='w')keys.jump=true;if(k==='p')pauseGame();if(k==='r')restartLevel();if(k==='enter'&&state!=='playing'&&state!=='paused')mainBtn.click()});
+window.addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(k==='arrowleft'||k==='a')keys.left=false;if(k==='arrowright'||k==='d')keys.right=false;if(k===' '||k==='arrowup'||k==='w')keys.jump=false});
+document.querySelectorAll('[data-hold]').forEach(btn=>{const key=btn.dataset.hold;const down=e=>{e.preventDefault();keys[key]=true};const up=e=>{e.preventDefault();keys[key]=false};btn.addEventListener('pointerdown',down);btn.addEventListener('pointerup',up);btn.addEventListener('pointerleave',up);btn.addEventListener('pointercancel',up)});
+window.addEventListener('blur',()=>{keys.left=keys.right=keys.jump=false;if(state==='playing')pauseGame()});
+best=Math.max(best,0);createLevel(0);updateHUD();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
